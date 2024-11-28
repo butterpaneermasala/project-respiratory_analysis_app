@@ -6,6 +6,7 @@ import 'package:http/http.dart' as http;
 
 class AudioService {
   final FlutterSoundRecorder _recorder = FlutterSoundRecorder();
+  final FlutterSoundPlayer _player = FlutterSoundPlayer();
   String? _recordingPath;
 
   // Start recording audio and save it to a file
@@ -13,7 +14,7 @@ class AudioService {
     try {
       // Initialize recorder if not already initialized
       if (!_recorder.isRecording) {
-        await _recorder.openRecorder();  // Open the recorder explicitly
+        await _recorder.openRecorder();
       }
 
       Directory tempDir = await getTemporaryDirectory();
@@ -43,6 +44,35 @@ class AudioService {
     }
   }
 
+  // Play the recorded audio
+  Future<void> startPlayback() async {
+    try {
+      if (_recordingPath != null && !_player.isPlaying) {
+        await _player.openPlayer();
+        await _player.startPlayer(
+          fromURI: _recordingPath,
+          codec: Codec.pcm16WAV,
+          whenFinished: () {
+            print("Playback finished.");
+          },
+        );
+      }
+    } catch (e) {
+      print("Error starting playback: $e");
+    }
+  }
+
+  // Stop the playback
+  Future<void> stopPlayback() async {
+    try {
+      if (_player.isPlaying) {
+        await _player.stopPlayer();
+      }
+    } catch (e) {
+      print("Error stopping playback: $e");
+    }
+  }
+
   // Upload the recorded audio file to the server
   Future<String?> uploadAudioFile(String filePath) async {
     try {
@@ -66,15 +96,19 @@ class AudioService {
     }
   }
 
-  // Dispose resources (close the recorder)
+  // Dispose resources (close the recorder and player)
   Future<void> dispose() async {
     try {
       if (_recorder.isRecording) {
-        await _recorder.stopRecorder();  // Ensure it's stopped before closing
+        await _recorder.stopRecorder(); // Ensure it's stopped before closing
+      }
+      if (_player.isPlaying) {
+        await _player.stopPlayer(); // Stop playback if running
       }
       await _recorder.closeRecorder();
+      await _player.closePlayer();
     } catch (e) {
-      print("Error disposing recorder: $e");
+      print("Error disposing recorder/player: $e");
     }
   }
 }
