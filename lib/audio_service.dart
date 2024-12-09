@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter_sound/flutter_sound.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:http/http.dart' as http;
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class AudioService {
   final FlutterSoundRecorder _recorder = FlutterSoundRecorder();
@@ -73,7 +74,7 @@ class AudioService {
     }
   }
 
-  // Upload the recorded audio file to the server
+  // Upload the recorded audio file to the server and get the result
   Future<String?> uploadAudioFile(String filePath) async {
     try {
       var request = http.MultipartRequest(
@@ -86,13 +87,32 @@ class AudioService {
       if (response.statusCode == 200) {
         final responseBody = await response.stream.bytesToString();
         final decodedResponse = jsonDecode(responseBody);
-        return decodedResponse['predicted_class']; // Return predicted class
+        return decodedResponse['predicted_class']; // Return predicted class from server
       } else {
         return 'Error uploading audio: ${response.statusCode}';
       }
     } catch (e) {
       print("Error uploading audio: $e");
       return 'Error uploading audio';
+    }
+  }
+
+  // Function to store symptoms and diagnosis result in Firestore
+  Future<void> storeDiagnosisRecord(
+      String diagnosisResult,
+      List<String> symptoms,
+      String userId,
+      ) async {
+    try {
+      await FirebaseFirestore.instance.collection('diagnosis_records').add({
+        'user_id': userId,  // Storing the user ID
+        'date': DateTime.now().toIso8601String(),
+        'result': diagnosisResult,
+        'symptoms': symptoms,
+      });
+    } catch (e) {
+      print('Error storing diagnosis record: $e');
+      rethrow;  // Propagate the error
     }
   }
 

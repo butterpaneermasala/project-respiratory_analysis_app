@@ -1,10 +1,11 @@
-import 'dart:io';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'audio_service.dart';
 
 class RecordAudioScreen extends StatefulWidget {
-  const RecordAudioScreen({Key? key}) : super(key: key);
+  final List<String> symptoms;
+  const RecordAudioScreen({Key? key, required this.symptoms}) : super(key: key);
 
   @override
   _RecordAudioScreenState createState() => _RecordAudioScreenState();
@@ -113,6 +114,16 @@ class _RecordAudioScreenState extends State<RecordAudioScreen> {
 
     try {
       String? response = await _audioService.uploadAudioFile(_filePath!);
+      if (response != null) {
+        // Get the current user's ID from FirebaseAuth
+        final userId = FirebaseAuth.instance.currentUser?.uid;
+
+        if (userId != null) {
+          await AudioService().storeDiagnosisRecord(response, widget.symptoms, userId); // Pass the user ID
+        } else {
+          _serverResponse =  'User not logged in';
+        }
+      }
       setState(() {
         _serverResponse = response ?? 'Audio uploaded successfully';
         _isUploading = false;

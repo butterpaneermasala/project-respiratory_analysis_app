@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
-import 'audio_option_screen.dart';
+import 'audio_option_screen.dart'; // Import AudioOptionScreen
 import 'auth_service.dart';
 import 'auth_screen.dart';
+import 'profile_screen.dart'; // Import the ProfileScreen
 
 class SymptomChecklist extends StatefulWidget {
   const SymptomChecklist({Key? key}) : super(key: key);
@@ -20,6 +21,7 @@ class _SymptomChecklistState extends State<SymptomChecklist> {
     'Difficulty breathing': false,
   };
 
+  // Logout functionality
   Future<void> _logout() async {
     await AuthService().signOut();
     Navigator.pushAndRemoveUntil(
@@ -29,13 +31,29 @@ class _SymptomChecklistState extends State<SymptomChecklist> {
     );
   }
 
+  // Profile click handler
+  void _goToProfile() {
+    // Navigate to the profile screen
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const ProfileScreen()),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Symptom Checklist'),
-        backgroundColor: Colors.teal[300], // Enhanced color
+        backgroundColor: Colors.teal[300],
         actions: [
+          // Profile icon in the top right corner
+          IconButton(
+            icon: const Icon(Icons.account_circle),
+            onPressed: _goToProfile,
+            tooltip: 'Profile',
+          ),
+          // Popup menu for logout
           PopupMenuButton<String>(
             onSelected: (String value) {
               if (value == 'Logout') {
@@ -136,10 +154,23 @@ class _SymptomChecklistState extends State<SymptomChecklist> {
                 ),
                 ElevatedButton.icon(
                   onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => AudioOptionScreen()),
-                    );
+                    List<String> selectedSymptoms = symptoms.entries
+                        .where((entry) => entry.value)
+                        .map((entry) => entry.key)
+                        .toList();
+
+                    if (selectedSymptoms.isNotEmpty) {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => AudioOptionScreen(symptoms: selectedSymptoms),
+                        ),
+                      );
+                    } else {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Please select symptoms first!')),
+                      );
+                    }
                   },
                   icon: const Icon(Icons.arrow_forward),
                   label: const Text('Proceed'),

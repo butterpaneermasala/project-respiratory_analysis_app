@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
 import 'record_audio_screen.dart';
 import 'upload_audio_screen.dart';
+import 'record_audio_screen.dart';
 import 'auth_screen.dart';
 import 'auth_service.dart';
 
 class AudioOptionScreen extends StatelessWidget {
-  const AudioOptionScreen({Key? key}) : super(key: key);
+  final List<String> symptoms; // Receive symptoms from SymptomChecklist
+
+  const AudioOptionScreen({Key? key, required this.symptoms}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -30,7 +33,7 @@ class AudioOptionScreen extends StatelessWidget {
                   label: 'Record Audio',
                   onPressed: () => Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (context) => const RecordAudioScreen()),
+                    MaterialPageRoute(builder: (context) =>  RecordAudioScreen(symptoms: symptoms)),
                   ),
                 ),
                 const SizedBox(height: 20),
@@ -40,7 +43,9 @@ class AudioOptionScreen extends StatelessWidget {
                   label: 'Upload Audio',
                   onPressed: () => Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (context) => const UploadAudioScreen()),
+                    MaterialPageRoute(
+                      builder: (context) => UploadAudioScreen(symptoms: symptoms), // Pass selectedSymptoms here
+                    ),
                   ),
                 ),
                 const SizedBox(height: 20),
